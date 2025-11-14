@@ -1,47 +1,36 @@
-// URL do seu Supabase
-const SUPABASE_URL = "https://yihykuogkltxlqmjdcxx.supabase.co";
+// Inicializa Supabase
+const supabaseUrl = 'https://yihykuogkltxlqmjdcxx.supabase.co';
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlpaHlrdW9na2x0eGxxbWpkY3h4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMwNTgxNDYsImV4cCI6MjA3ODYzNDE0Nn0.AEamOcEMH01JeM40nxq-Z_Xg7Fe6DHwIWlKsywKrhH0';
+const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
-// ANON KEY do seu Supabase
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlpaHlrdW9na2x0eGxxbWpkY3h4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMwNTgxNDYsImV4cCI6MjA3ODYzNDE0Nn0.AEamOcEMH01JeM40nxq-Z_Xg7Fe6DHwIWlKsywKrhH0";
+// Pega o ID do cliente da URL
+const clienteId = new URLSearchParams(window.location.search).get('id');
 
-// Criar cliente do Supabase CORRETAMENTE
-const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// Função para listar arquivos do Storage
+async function listarArquivos(clienteId) {
+  const { data: arquivos, error } = await supabaseClient
+    .storage
+    .from('clientes')
+    .list(String(clienteId)); // pasta do cliente
 
-// Pega o ID da URL
-const params = new URLSearchParams(window.location.search);
-const clientId = params.get("id");
+  if (error) {
+    console.error('Erro ao listar arquivos:', error);
+    document.getElementById('listaArquivos').textContent = 'Erro ao carregar arquivos.';
+    return [];
+  }
 
-// Carrega arquivos
-async function loadFiles() {
-
-    const { data, error } = await supabaseClient
-        .from("arquivos_clientes")
-        .select("*")
-        .eq("cliente_id", clientId);
-
-    if (error) {
-        console.error("Erro Supabase:", error);
-        return;
-    }
-
-    const container = document.getElementById("files");
-    container.innerHTML = "";
-
-    if (!data || data.length === 0) {
-        container.innerHTML = "<p>Nenhum arquivo encontrado.</p>";
-        return;
-    }
-
-    data.forEach(file => {
-        const link = document.createElement("a");
-        link.href = file.url;
-        link.textContent = file.nome_arquivo;
-        link.target = "_blank";
-
-        const div = document.createElement("div");
-        div.appendChild(link);
-        container.appendChild(div);
-    });
+  return arquivos.map(arq => ({
+    nome: arq.name,
+    url: supabaseClient.storage.from('clientes').getPublicUrl(`${clienteId}/${arq.name}`).data.publicUrl
+  }));
 }
 
-loadFiles();
+// Mostra os arquivos no site
+listarArquivos(clienteId).then(arquivos => {
+  const lista = document.getElementById('listaArquivos');
+  if (arquivos.length === 0) {
+    lista.textContent = 'Nenhum arquivo encontrado.';
+  } else {
+    lista.innerHTML = arquivos.map(a => `<a href="${a.url}" target="_blank">${a.nome}</a>`).join('<br>');
+  }
+});
