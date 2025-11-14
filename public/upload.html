@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Upload de Arquivo</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<h2>Upload de Arquivo do Cliente</h2>
+
+<form id="uploadForm">
+  <label>Cliente ID:</label>
+  <input type="number" id="clienteId" required /><br/><br/>
+
+  <label>Arquivo:</label>
+  <input type="file" id="arquivo" required /><br/><br/>
+
+  <button type="submit">Enviar</button>
+</form>
+
+<p id="status"></p>
+
+<script>
+  // Inicializa Supabase
+  const supabaseUrl = 'https://yihykuogkltxlqmjdcxx.supabase.co';
+  const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlpaHlrdW9na2x0eGxxbWpkY3h4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMwNTgxNDYsImV4cCI6MjA3ODYzNDE0Nn0.AEamOcEMH01JeM40nxq-Z_Xg7Fe6DHwIWlKsywKrhH0';
+  const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+
+  const form = document.getElementById('uploadForm');
+  const status = document.getElementById('status');
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const clienteId = document.getElementById('clienteId').value;
+    const arquivo = document.getElementById('arquivo').files[0];
+
+    if (!arquivo) return;
+
+    const fileName = arquivo.name;
+    const filePath = `${clienteId}/${fileName}`;
+
+    try {
+      // 1️⃣ Upload para Storage
+      const { data: uploadData, error: uploadError } = await supabase
+        .storage
+        .from('clientes')
+        .upload(filePath, arquivo, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      // URL pública
+      const url = supabase.storage.from('clientes').getPublicUrl(filePath).data.publicUrl;
+
+      // 2️⃣ Inserção no banco
+      const { data, error } = await supabase
+        .from('arquivos_clientes')
+        .insert([{ cliente_id: clienteId, nome_arquivo: fileName, url }]);
+
+      if (error) throw error;
+
+      status.textContent = `Arquivo enviado com sucesso! URL: ${url}`;
+    } catch (err) {
+      console.error(err);
+      status.textContent = `Erro: ${err.message}`;
+    }
+  });
+</script>
+</body>
+</html>
