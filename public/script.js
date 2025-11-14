@@ -4,14 +4,14 @@ const SUPABASE_URL = "https://yihykuogkltxlqmjdcxx.supabase.co";
 // ANON KEY do seu Supabase
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlpaHlrdW9na2x0eGxxbWpkY3h4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMwNTgxNDYsImV4cCI6MjA3ODYzNDE0Nn0.AEamOcEMH01JeM40nxq-Z_Xg7Fe6DHwIWlKsywKrhH0";
 
-// 🔥 Agora sim: cria o cliente Supabase corretamente
+// Criar cliente do Supabase CORRETAMENTE
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// Pegando ID da URL
+// Pega o ID da URL
 const params = new URLSearchParams(window.location.search);
 const clientId = params.get("id");
 
-// Carrega os arquivos do cliente
+// Carrega arquivos
 async function loadFiles() {
 
     const { data, error } = await supabaseClient
@@ -20,7 +20,7 @@ async function loadFiles() {
         .eq("cliente_id", clientId);
 
     if (error) {
-        console.error("Erro ao buscar arquivos:", error);
+        console.error("Erro Supabase:", error);
         return;
     }
 
@@ -40,7 +40,6 @@ async function loadFiles() {
 
         const div = document.createElement("div");
         div.appendChild(link);
-
         container.appendChild(div);
     });
 }
