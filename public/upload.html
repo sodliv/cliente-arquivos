@@ -24,7 +24,7 @@
   // Inicializa Supabase
   const supabaseUrl = 'https://yihykuogkltxlqmjdcxx.supabase.co';
   const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlpaHlrdW9na2x0eGxxbWpkY3h4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMwNTgxNDYsImV4cCI6MjA3ODYzNDE0Nn0.AEamOcEMH01JeM40nxq-Z_Xg7Fe6DHwIWlKsywKrhH0';
-  const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+  const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
   const form = document.getElementById('uploadForm');
   const status = document.getElementById('status');
@@ -42,20 +42,24 @@
 
     try {
       // 1️⃣ Upload para Storage
-      const { data: uploadData, error: uploadError } = await supabase
+      const { data: uploadData, error: uploadError } = await supabaseClient
         .storage
         .from('clientes')
         .upload(filePath, arquivo, { upsert: true });
 
+      console.log('Upload:', uploadData, uploadError);
+
       if (uploadError) throw uploadError;
 
       // URL pública
-      const url = supabase.storage.from('clientes').getPublicUrl(filePath).data.publicUrl;
+      const url = supabaseClient.storage.from('clientes').getPublicUrl(filePath).data.publicUrl;
 
       // 2️⃣ Inserção no banco
-      const { data, error } = await supabase
+      const { data, error } = await supabaseClient
         .from('arquivos_clientes')
         .insert([{ cliente_id: clienteId, nome_arquivo: fileName, url }]);
+
+      console.log('Insert:', data, error);
 
       if (error) throw error;
 
